@@ -73,7 +73,12 @@ spec:
             timeoutSeconds: {{ .Values.console.readinessProbe.timeoutSeconds }}
           {{- end }} 
           resources:
-            {{- toYaml .Values.console.resources | nindent 12 }}
+            limits:
+              cpu: "100m"
+              memory: "2048Mi"
+            requests:
+              cpu: "500m"
+              memory: "2048Mi"
           volumeMounts:
           - name: localtime
             readOnly: true
