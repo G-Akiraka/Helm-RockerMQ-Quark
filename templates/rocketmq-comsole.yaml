@@ -38,6 +38,14 @@ spec:
           env:
             - name: TZ
               value: Asia/Shanghai
+            # - name: JAVA_OPTS
+            #   {{- $releaseNamespace := .Release.Namespace }}
+            #   {{- $rocketmqFullname := include "quark.fullname" . }}
+            #   {{- $replicaCount := int .Values.namesrv.replicaCount }}
+            #   {{- $namesrvPort := int .Values.namesrv.service.namesrvPort }}
+            #   {{- $rocketmqHeadlessServiceName := printf "%s-%s" $rocketmqFullname "namesrv-headless" | trunc 63  }}
+            #   {{- $clusterDomain := .Values.shareConfig.clusterDomain }}
+            #   value: "-Drocketmq.namesrv.addr={{ range $i, $e := until $replicaCount }}{{ $rocketmqFullname }}-namesrv-{{ $e }}.{{ $rocketmqHeadlessServiceName }}.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}:{{ $namesrvPort }} {{ end }} -Dcom.rocketmq.sendMessageWithVIPChannel=false"
             - name: ROCKETMQ_NAME
               value: {{ template "quark.fullname" . }}
             - name: CLUSTER_DOMAIN
@@ -63,10 +71,8 @@ spec:
             initialDelaySeconds: {{ .Values.console.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.console.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.console.readinessProbe.timeoutSeconds }}
-          {{- end }}
-          {{- if .Values.console.resources }}
-          resources: {{- toYaml .Values.console.resources | nindent 12 }}
-          {{- end }}
+          {{- end }} 
+          resources: {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
           - name: localtime
             readOnly: true
