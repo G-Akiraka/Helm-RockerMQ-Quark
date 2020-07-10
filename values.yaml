@@ -106,7 +106,7 @@ console:
       memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 2048Mi
+      memory: 128Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
@@ -141,11 +141,11 @@ namesrv:
   # 性能设置
   resources:
     limits:
-      cpu: 100m
-      memory: 1024Mi
+      cpu: "100m"
+      memory: "2048Mi"
     requests:
-      cpu: 500m
-      memory: 2048Mi
+      cpu: "500m"
+      memory: "2048Mi"
   # 安全上下文
   securityContext:
     runAsUser: 0
