@@ -71,14 +71,14 @@ spec:
             initialDelaySeconds: {{ .Values.console.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.console.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.console.readinessProbe.timeoutSeconds }}
-          {{- end }} 
+          {{- end }}
           resources:
-            limits:
-              cpu: "100m"
-              memory: "2048Mi"
             requests:
+              memory: "100Mi"
+              cpu: "100m"
+            limits:
+              memory: "200Mi"
               cpu: "500m"
-              memory: "2048Mi"
           volumeMounts:
           - name: localtime
             readOnly: true
