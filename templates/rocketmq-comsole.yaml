@@ -38,14 +38,6 @@ spec:
           env:
             - name: TZ
               value: Asia/Shanghai
-            # - name: JAVA_OPTS
-            #   {{- $releaseNamespace := .Release.Namespace }}
-            #   {{- $rocketmqFullname := include "quark.fullname" . }}
-            #   {{- $replicaCount := int .Values.namesrv.replicaCount }}
-            #   {{- $namesrvPort := int .Values.namesrv.service.namesrvPort }}
-            #   {{- $rocketmqHeadlessServiceName := printf "%s-%s" $rocketmqFullname "namesrv-headless" | trunc 63  }}
-            #   {{- $clusterDomain := .Values.shareConfig.clusterDomain }}
-            #   value: "-Drocketmq.namesrv.addr={{ range $i, $e := until $replicaCount }}{{ $rocketmqFullname }}-namesrv-{{ $e }}.{{ $rocketmqHeadlessServiceName }}.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}:{{ $namesrvPort }} {{ end }} -Dcom.rocketmq.sendMessageWithVIPChannel=false"
             - name: ROCKETMQ_NAME
               value: {{ template "quark.fullname" . }}
             - name: CLUSTER_DOMAIN
