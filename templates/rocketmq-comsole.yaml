@@ -72,13 +72,9 @@ spec:
             periodSeconds: {{ .Values.console.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.console.readinessProbe.timeoutSeconds }}
           {{- end }}
-          resources:
-            requests:
-              cpu: {{ .Values.console.resources.requests.cpu }}
-              memory: {{ .Values.console.resources.requests.memory }} 
-            limits:
-              cpu: {{ .Values.console.resources.limits.cpu }}
-              memory: {{ .Values.console.resources.limits.memory }}
+          {{- if .Values.console.resources }}
+          resources: {{- toYaml .Values.console.resources | nindent 12 }}
+          {{- end }}
           volumeMounts:
           - name: localtime
             readOnly: true
