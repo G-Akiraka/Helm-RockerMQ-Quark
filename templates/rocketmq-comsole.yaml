@@ -73,12 +73,12 @@ spec:
             timeoutSeconds: {{ .Values.console.readinessProbe.timeoutSeconds }}
           {{- end }}
           resources:
-            requests:
-              memory: "100Mi"
-              cpu: "100m"
             limits:
-              memory: "200Mi"
-              cpu: "500m"
+              cpu: {{ .Values.console.resources.limits.cpu }}
+              memory: {{ .Values.console.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.console.resources.requests.cpu }}
+              memory: {{ .Values.console.resources.requests.memory }} 
           volumeMounts:
           - name: localtime
             readOnly: true
