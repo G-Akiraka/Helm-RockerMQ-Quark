@@ -143,9 +143,6 @@ namesrv:
     limits:
       cpu: "100m"
       memory: "2048Mi"
-    requests:
-      cpu: "500m"
-      memory: "2048Mi"
   # 安全上下文
   securityContext:
     runAsUser: 0
