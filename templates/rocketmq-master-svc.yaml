@@ -1,0 +1,24 @@
+{{- if .Values.master.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "quark.fullname" . }}-master-headless
+  labels:
+    {{- include "quark.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.master.service.type }}
+  clusterIP: None
+  ports:
+    - name: slaveport
+      port: {{ .Values.master.service.slavePort }}
+      targetPort: {{ .Values.master.service.slavePort }}
+    - name: serverport
+      port: {{ .Values.master.service.serverPort }}
+      targetPort: {{ .Values.master.service.serverPort }}
+    - name: halistenport
+      port: {{ .Values.master.service.haListenPort }}
+      targetPort: {{ .Values.master.service.haListenPort }}
+  selector:
+    {{- include "quark.selectorLabels" . | nindent 4 }}
+    app: {{ template "quark.fullname" . }}-master
+{{- end }}

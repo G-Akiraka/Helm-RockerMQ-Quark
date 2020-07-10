@@ -1,0 +1,11 @@
+1. Get the Quark URL by running:
+{{- if .Values.ingress.enabled }}
+  {{- if .Values.ingress.hostname }}
+    Quark URL(s): http://{{ .Values.ingress.hostname }}
+  {{- end }}
+  {{- range $host := .Values.ingress.hosts }}
+    {{- range .paths }}
+      - http://{{ $host.name }}{{ . }}
+    {{- end }}
+  {{- end }}
+{{- end }}

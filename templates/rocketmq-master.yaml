@@ -1,0 +1,150 @@
+{{- if .Values.master.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "quark.fullname" . }}-master
+  labels:
+    {{- include "quark.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.master.replicaCount }}
+  serviceName: {{ template "quark.fullname" . }}-master-headless
+  selector:
+    matchLabels:
+      {{- include "quark.selectorLabels" . | nindent 6 }}
+      app: {{ template "quark.fullname" . }}-master
+  template:
+    metadata:
+      labels:
+        {{- include "quark.selectorLabels" . | nindent 8 }}
+        app: {{ template "quark.fullname" . }}-master
+    spec:
+    {{- with .Values.shareConfig.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "quark.serviceAccountName" . }}
+      containers:
+        - name: {{ .Values.master.appName }}
+          {{- if .Values.master.securityContext }}
+          securityContext:
+            {{- toYaml .Values.master.securityContext | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.shareConfig.image.repository }}:{{ .Values.shareConfig.image.tag }}"
+          imagePullPolicy: {{ .Values.shareConfig.image.pullPolicy }}
+          command: ["sh","-c","/home/rocketmq-quark.sh"]
+          ports:
+          - name: slaveport
+            containerPort: {{ .Values.master.service.slavePort }}
+          - name: serverport
+            containerPort: {{ .Values.master.service.serverPort }}
+          - name: halistenport
+            containerPort: {{ .Values.master.service.haListenPort }}
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+            - name: ROCKETMQ_NAME
+              value: {{ template "quark.fullname" . }}
+            - name: CLUSTER_DOMAIN
+              value: {{ .Values.shareConfig.clusterDomain }}
+            - name: ROCKETMQ_NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: ROCKETMQ_NAMESRV_PORT
+              value: {{ .Values.namesrv.service.namesrvPort | quote }}
+            - name: ROCKETMQ_NAMESRV_NUMBER
+              value: {{ .Values.namesrv.replicaCount | quote }}
+            - name: BROKER_ID
+              value: {{ .Values.master.brokerId | quote }}
+            - name: BROKER_ROLE
+              value: {{ .Values.master.brokerRole | quote }}
+            - name: BROKER_CLUSTER_NAME
+              value: {{ .Values.shareConfig.brokerClusterName }}
+            - name: FLUSH_DISK_TYPE
+              value: {{ .Values.shareConfig.flushDiskType }}
+            - name: DELETE_WHEN
+              value: {{ .Values.shareConfig.deleteWhen | quote }}
+            - name: FILE_RESERVED_TIME
+              value: {{ .Values.shareConfig.fileReservedTime | quote }}
+            - name: AUTO_CREATE_TOPIC_ENABLE
+              value: {{ .Values.shareConfig.autoCreateTopicEnable | quote }}
+            - name: ROCKETMQ_VERSION
+              value: {{ .Values.shareConfig.image.tag | quote }}
+          {{- if .Values.master.containerEnv }}
+          {{- toYaml .Values.master.containerEnv | nindent 12 }}
+          {{- end }}
+          {{- if .Values.master.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.master.service.slavePort }}     
+            initialDelaySeconds: {{ .Values.master.livenessProbe.initialDelaySeconds }}
+            failureThreshold: {{ .Values.master.livenessProbe.failureThreshold }}
+            timeoutSeconds: {{ .Values.master.livenessProbe.timeoutSeconds }}
+          {{- end }} 
+          {{- if .Values.master.readinessProbe.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.master.service.slavePort }}
+            initialDelaySeconds: {{ .Values.master.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.master.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.master.readinessProbe.timeoutSeconds }}
+          {{- end }} 
+          resources:
+            {{- toYaml .Values.master.resources | nindent 12 }}
+          volumeMounts:
+          - name: localtime
+            readOnly: true
+            mountPath: /etc/localtime
+          - name: rockermq-cm-config
+            readOnly: false
+            subPath: rocketmq-broker-quark.sh
+            mountPath: /home/rocketmq-quark.sh
+          - name: rocketmq-data
+            mountPath: /opt
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: rockermq-cm-config
+        configMap:
+          defaultMode: 0755
+          name: {{ template "quark.fullname" . }}-config
+      - name: rocketmq-data
+        {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "quark.fullname" .) }}-master
+        {{- else }}
+        emptyDir: {}
+        {{- end -}}
+      {{- if .Values.shareConfig.extraVolumes }}
+        {{- toYaml .Values.shareConfig.extraVolumes | nindent 6 }}
+      {{- end }}
+      {{- with .Values.shareConfig.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.shareConfig.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.shareConfig.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim )}}
+  volumeClaimTemplates:
+    - metadata:
+        name: rocketmq-data
+        annotations:
+        {{- range $key, $value := .Values.persistence.annotations }}
+          {{ $key }}: {{ $value }}
+        {{- end }}
+      spec:
+        accessModes:
+        {{- range .Values.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+  {{- end }}
+{{- end }}

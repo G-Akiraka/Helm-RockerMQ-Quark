@@ -1,0 +1,17 @@
+{{- if .Values.console.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "quark.fullname" . }}-console
+  labels:
+    {{- include "quark.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.console.service.type }}
+  ports:
+    - name: console
+      port: {{ .Values.console.service.consoleport }}
+      targetPort: {{ .Values.console.service.consoleport }}
+  selector:
+    {{- include "quark.selectorLabels" . | nindent 4 }}
+    app: {{ template "quark.fullname" . }}-console
+{{- end }}

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "quark.fullname" . }}-namesrv
+  labels:
+    {{- include "quark.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.namesrv.service.type }}
+  ports:
+    - name: namesrv
+      port: {{ .Values.namesrv.service.namesrvPort }}
+      targetPort: {{ .Values.namesrv.service.namesrvPort }}
+  selector:
+    {{- include "quark.selectorLabels" . | nindent 4 }}
+    app: {{ template "quark.fullname" . }}-namesrv
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "quark.fullname" . }}-namesrv-headless
+  labels:
+    {{- include "quark.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.namesrv.service.type }}
+  clusterIP: None
+  ports:
+    - name: namesrv
+      port: {{ .Values.namesrv.service.namesrvPort }}
+      targetPort: {{ .Values.namesrv.service.namesrvPort }}
+  selector:
+    {{- include "quark.selectorLabels" . | nindent 4 }}
+    app: {{ template "quark.fullname" . }}-namesrv

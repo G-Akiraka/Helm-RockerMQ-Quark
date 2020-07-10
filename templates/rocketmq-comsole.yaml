@@ -1,0 +1,105 @@
+{{- if .Values.console.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "quark.fullname" . }}-console
+  labels:
+    {{- include "quark.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.console.replicaCount }}
+  serviceName: {{ template "quark.fullname" . }}-console-headless
+  selector:
+    matchLabels:
+      {{- include "quark.selectorLabels" . | nindent 6 }}
+      app: {{ template "quark.fullname" . }}-console
+  template:
+    metadata:
+      labels:
+        {{- include "quark.selectorLabels" . | nindent 8 }}
+        app: {{ template "quark.fullname" . }}-console
+    spec:
+    {{- with .Values.shareConfig.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "quark.serviceAccountName" . }}
+      containers:
+        - name: {{ .Values.console.appName }}
+          {{- if .Values.console.securityContext }}
+          securityContext:
+            {{- toYaml .Values.console.securityContext | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.console.image.repository }}:{{ .Values.console.image.tag }}"
+          imagePullPolicy: {{ .Values.console.image.pullPolicy }}
+          ports:
+          - name: console
+            containerPort: {{ .Values.console.service.consoleport }}
+          command: ["sh","-c","/home/rocketmq-quark.sh"]
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+            # - name: JAVA_OPTS
+            #   {{- $releaseNamespace := .Release.Namespace }}
+            #   {{- $rocketmqFullname := include "quark.fullname" . }}
+            #   {{- $replicaCount := int .Values.namesrv.replicaCount }}
+            #   {{- $namesrvPort := int .Values.namesrv.service.namesrvPort }}
+            #   {{- $rocketmqHeadlessServiceName := printf "%s-%s" $rocketmqFullname "namesrv-headless" | trunc 63  }}
+            #   {{- $clusterDomain := .Values.shareConfig.clusterDomain }}
+            #   value: "-Drocketmq.namesrv.addr={{ range $i, $e := until $replicaCount }}{{ $rocketmqFullname }}-namesrv-{{ $e }}.{{ $rocketmqHeadlessServiceName }}.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}:{{ $namesrvPort }} {{ end }} -Dcom.rocketmq.sendMessageWithVIPChannel=false"
+            - name: ROCKETMQ_NAME
+              value: {{ template "quark.fullname" . }}
+            - name: CLUSTER_DOMAIN
+              value: {{ .Values.shareConfig.clusterDomain }}
+            - name: ROCKETMQ_NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: ROCKETMQ_NAMESRV_PORT
+              value: {{ .Values.namesrv.service.namesrvPort | quote }}
+            - name: ROCKETMQ_NAMESRV_NUMBER
+              value: {{ .Values.namesrv.replicaCount | quote }}
+          {{- if .Values.console.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.console.service.consoleport }}     
+            initialDelaySeconds: {{ .Values.console.livenessProbe.initialDelaySeconds }}
+            failureThreshold: {{ .Values.console.livenessProbe.failureThreshold }}
+            timeoutSeconds: {{ .Values.console.livenessProbe.timeoutSeconds }}
+          {{- end }} 
+          {{- if .Values.console.readinessProbe.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.console.service.consoleport }}
+            initialDelaySeconds: {{ .Values.console.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.console.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.console.readinessProbe.timeoutSeconds }}
+          {{- end }} 
+          resources:
+            {{- toYaml .Values.console.resources | nindent 12 }}
+          volumeMounts:
+          - name: localtime
+            readOnly: true
+            mountPath: /etc/localtime
+          - name: rockermq-cm-config
+            readOnly: false
+            subPath: rocketmq-console-quark.sh
+            mountPath: /home/rocketmq-quark.sh
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: rockermq-cm-config
+        configMap:
+          defaultMode: 0755
+          name: {{ template "quark.fullname" . }}-config
+      {{- with .Values.shareConfig.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.shareConfig.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.shareConfig.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 6 }}
+    {{- end }}
+{{- end }}

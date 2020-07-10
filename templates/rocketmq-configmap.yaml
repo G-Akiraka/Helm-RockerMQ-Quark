@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "quark.fullname" . }}-config
+  labels:
+    app: "{{ template "quark.fullname" . }}"
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+data:
+  rocketmq-broker-quark.sh: |
+    #!/bin/bash
+    export ROCKETMQ_VERSION="${ROCKETMQ_VERSION}"
+    export BROKER_NAME="`echo ${HOSTNAME} | sed 's#master-##g' | sed 's#slave-##g'`"
+    export ROCKETMQ_HOME="/home/rocketmq/rocketmq-${ROCKETMQ_VERSION}"
+    export ROCKETMQ_FILE="/home/${BROKER_NAME}.properties"
+    export PATH=$PATH:${ROCKETMQ_HOME}/bin
+    export BROKER_IP="`cat /etc/hosts | awk 'END{print $1}'`"
+
+    echo "# Broker所属哪个集群，默认【DefaultCluster" > ${ROCKETMQ_FILE}
+    echo "brokerClusterName=${BROKER_CLUSTER_NAME}" >> ${ROCKETMQ_FILE}
+    echo "brokerIP1=${BROKER_IP}" >> ${ROCKETMQ_FILE}
+    echo "# 本机主机名" >> ${ROCKETMQ_FILE}
+    echo "brokerName=${BROKER_NAME}" >> ${ROCKETMQ_FILE}
+    echo "# Broker 角色,SYNC_MASTER 同步双写 Master,ASYNC_MASTER 异步复制 Master,SLAVE 从角色" >> ${ROCKETMQ_FILE}
+    echo "brokerRole=${BROKER_ROLE}" >> ${ROCKETMQ_FILE}
+    echo "# BrokerId，必须是大等于0的整数，0 表示Master，> 0表示Slave" >> ${ROCKETMQ_FILE}
+    echo "brokerId=${BROKER_ID}" >> ${ROCKETMQ_FILE}
+    echo "# 删除文件时间点，默认凌晨4点" >> ${ROCKETMQ_FILE}
+    echo "deleteWhen=${DELETE_WHEN}" >> ${ROCKETMQ_FILE}
+    echo "# 文件保留时间，默认48小时" >> ${ROCKETMQ_FILE}
+    echo "fileReservedTime=${FILE_RESERVED_TIME}" >> ${ROCKETMQ_FILE}
+    echo "# 是否允许Broker自动创建Topic，建议线下开启，线上关闭，默认【true】" >> ${ROCKETMQ_FILE}
+    echo "autoCreateTopicEnable=${AUTO_CREATE_TOPIC_ENABLE}" >> ${ROCKETMQ_FILE}
+    echo "# 刷盘方式,SYNC_FLUSH 同部刷盘,ASYNC_FLUSH 异步刷盘" >> ${ROCKETMQ_FILE}
+    echo "flushDiskType=${FLUSH_DISK_TYPE}" >> ${ROCKETMQ_FILE}
+    echo "# Broker对外服务的监听端口,默认【10911】" >> ${ROCKETMQ_FILE}  
+    echo "listenPort=10911" >> ${ROCKETMQ_FILE}   
+    echo "# 单个conmmitlog文件大小默认1GB" >> ${ROCKETMQ_FILE} 
+    echo "mapedFileSizeCommitLog=1073741824" >> ${ROCKETMQ_FILE} 
+    echo "# 单个consumequeue文件大小默认30W条，根据业务调整" >> ${ROCKETMQ_FILE} 
+    echo "mapedFileSizeConsumeQueue=300000" >> ${ROCKETMQ_FILE} 
+    # echo "# 存储路径" >> ${ROCKETMQ_FILE}
+    # echo "storePathRootDir=/opt/rocketmq/store" >> ${ROCKETMQ_FILE}
+    # echo "# commitLog 存储路径" >> ${ROCKETMQ_FILE}
+    # echo "storePathCommitLog=/opt/rocketmq/store/commitlog" >> ${ROCKETMQ_FILE}
+    # echo "# 消息队列存储路径" >> ${ROCKETMQ_FILE}
+    # echo "storePathConsumeQueue=/opt/rocketmq/store/consumequeue" >> ${ROCKETMQ_FILE}
+    # echo "# 消息索引存储路径" >> ${ROCKETMQ_FILE}
+    # echo "storePathIndex=/opt/rocketmq/store/index" >> ${ROCKETMQ_FILE}
+    # echo "# checkpoint 文件存储路径" >> ${ROCKETMQ_FILE}
+    # echo "storePathCheckpoint=/opt/rocketmq/store/checkpoint" >> ${ROCKETMQ_FILE}
+    # echo "# abort 文件存储路径" >> ${ROCKETMQ_FILE}
+    # echo "abortFile=/opt/rocketmq/store/abort" >> ${ROCKETMQ_FILE}
+    echo "# Name Server地址" >> ${ROCKETMQ_FILE}
+    echo -en 'namesrvAddr=' >> ${ROCKETMQ_FILE}
+
+    # 判断 namesrv 副本数量
+    for(( i = 0; i < ${ROCKETMQ_NAMESRV_NUMBER}; i++ )); do
+    echo -en "${ROCKETMQ_NAME}-namesrv-${i}.${ROCKETMQ_NAME}-namesrv-headless.${ROCKETMQ_NAMESPACE}.svc.${CLUSTER_DOMAIN}:${ROCKETMQ_NAMESRV_PORT};" >> ${ROCKETMQ_FILE}
+    done
+    # sleep 60000000
+    # 运行
+    /bin/bash mqbroker -c ${ROCKETMQ_FILE}
+  rocketmq-console-quark.sh: |
+    #!/bin/bash
+    export ROCKETMQ_FILE="/home/rocketmq-console.sh"
+    echo '#!/bin/sh' > ${ROCKETMQ_FILE}
+    echo -en 'JAVA_OPTS="-Drocketmq.namesrv.addr=' >> ${ROCKETMQ_FILE}
+    for(( i = 0; i < ${ROCKETMQ_NAMESRV_NUMBER}; i++ )); do
+    echo -en "${ROCKETMQ_NAME}-namesrv-${i}.${ROCKETMQ_NAME}-namesrv-headless.${ROCKETMQ_NAMESPACE}.svc.${CLUSTER_DOMAIN}:${ROCKETMQ_NAMESRV_PORT};" >> ${ROCKETMQ_FILE}
+    done
+    echo -en ' -Dcom.rocketmq.sendMessageWithVIPChannel=false"' >> ${ROCKETMQ_FILE}
+    echo "" >> ${ROCKETMQ_FILE}
+    echo '/usr/bin/java ${JAVA_OPTS} -jar /app.jar' >> ${ROCKETMQ_FILE}
+    # 赋予脚本执行权限
+    chmod +x ${ROCKETMQ_FILE}
+    /bin/bash ${ROCKETMQ_FILE}

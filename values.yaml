@@ -1,0 +1,269 @@
+################################
+############ 共享配置 ############
+################################
+shareConfig:
+  image:
+    repository: foxiswho/rocketmq
+    tag: 4.7.0
+    pullPolicy: IfNotPresent
+  # 日志共享挂载
+  # 节点选择
+  nodeSelector: {}
+    # type: manager
+  # 容忍节点
+  tolerations: []
+    # - operator: Exists
+  # 亲和性
+  affinity: {}
+  # 私有仓库秘钥
+  imagePullmi: []
+  # 全局名称
+  nameOverride: ""
+  # 全局名称
+  fullnameOverride: ""
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name:
+  # Cluster domain
+  clusterDomain: cluster.local
+  publishNotReadyAddresses: true
+  # Broker所属哪个集群，默认【DefaultCluster】
+  brokerClusterName: quark
+  # 删除文件时间点，默认凌晨4点
+  deleteWhen: "04"
+  # 文件保留时间，默认48小时
+  fileReservedTime: "48"
+  # 是否允许Broker自动创建Topic，建议线下开启，线上关闭，默认【true】
+  autoCreateTopicEnable: true
+  # 刷盘方式,SYNC_FLUSH 同部刷盘,ASYNC_FLUSH 异步刷盘
+  flushDiskType: ASYNC_FLUSH
+
+################################
+############ 域名配置 ############
+################################
+ingress:
+  enabled: false
+  certManager: false
+  hostname: rockermq.akiraka.net
+  path: /
+  annotations:
+    kubernetes.io/ingress.allow-http: "true"
+    # 只在配置了HTTPS之后才会生效进行跳转
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # 强制跳转到https，不论是否配置了https证书
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+  # extraHosts:
+  # - name: tomcat.akiraka.net
+  #   path: /
+  tls: false
+  # extraTls:
+  # - hosts:
+  #   - tomcat.akiraka.net
+  #   secretName: tomcat.akiraka.net
+  secrets: []
+  # - name: tomcat.akiraka.net
+  #   key:
+  #   certificate:
+
+################################
+######## RocketMQ Console ########
+################################
+console:
+  enabled: true
+  # 副本数量
+  replicaCount: 1
+  # 应用名称
+  appName: rocketmq-console
+  image:
+    repository: styletang/rocketmq-console-ng
+    tag: 1.0.0
+    pullPolicy: IfNotPresent
+  # svc 设置
+  service:
+    type: NodePort
+    consoleport: 8080
+  # 判断容器是否存活
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    failureThreshold: 6
+    timeoutSeconds: 5
+  # 判断容器是否启动完成
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 3
+  # 性能设置
+  resources:
+    limits:
+      cpu: 100m
+      memory: 1024Mi
+    requests:
+      cpu: 500m
+      memory: 2048Mi
+  # 安全上下文
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    privileged: true
+
+################################
+######## RocketMQ Namesrv #######
+################################
+namesrv:
+  enabled: true
+  # Slave 数量
+  replicaCount: 1
+  # 应用名称
+  appName: rocketmq-namesrv
+  # svc 设置
+  service:
+    type: ClusterIP
+    namesrvPort: 9876
+  # 判断容器是否存活
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    failureThreshold: 6
+    timeoutSeconds: 5
+  # 判断容器是否启动完成
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 3
+  # 性能设置
+  resources:
+    limits:
+      cpu: 100m
+      memory: 1024Mi
+    requests:
+      cpu: 500m
+      memory: 2048Mi
+  # 安全上下文
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    privileged: true
+  # 容器环境变量
+  containerEnv:
+    - name: JAVA_OPT_EXT
+      value: -Duser.home=/opt -Xms1024M -Xmx1024M -Xmn256m
+
+################################
+######## RocketMQ Master #######
+################################
+master:
+  enabled: true
+  # 副本数量
+  replicaCount: 1
+  # 应用名称
+  appName: rocketmq-master
+  # svc 设置
+  service:
+    type: ClusterIP
+    slavePort: 10911
+    serverPort: 10909
+    haListenPort: 10912
+  # 判断容器是否存活
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    failureThreshold: 6
+    timeoutSeconds: 5
+  # 判断容器是否启动完成
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 3
+  # 性能设置
+  resources:
+    limits:
+      cpu: 100m
+      memory: 1024Mi
+    requests:
+      cpu: 500m
+      memory: 2048Mi
+  # 安全上下文
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    # allowPrivilegeEscalation: false
+    privileged: true
+  # 容器环境变量
+  containerEnv:
+    - name: JAVA_OPT_EXT
+      value: -Duser.home=/opt -Xms1024M -Xmx1024M -Xmn256m
+  # Broker 角色,SYNC_MASTER 同步双写 Master,ASYNC_MASTER 异步复制 Master,SLAVE 从角色
+  brokerRole: SYNC_MASTER
+  # BrokerId，必须是大等于0的整数，0 表示Master，> 0表示Slave
+  brokerId: "0"
+
+################################
+######## RocketMQ Slave ########
+################################
+slave:
+  enabled: true
+  # 副本数量
+  replicaCount: 1
+  # 应用名称
+  appName: rocketmq-salve
+  # svc 设置
+  service:
+    type: ClusterIP
+    slavePort: 10911
+    serverPort: 10909
+    haListenPort: 10912
+  # 判断容器是否存活
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    failureThreshold: 6
+    timeoutSeconds: 5
+  # 判断容器是否启动完成
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    timeoutSeconds: 3
+  # 性能设置
+  resources:
+    limits:
+      cpu: 100m
+      memory: 1024Mi
+    requests:
+      cpu: 500m
+      memory: 2048Mi
+  # 安全上下文
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    privileged: true
+  # 容器环境变量
+  containerEnv:
+    - name: JAVA_OPT_EXT
+      value: -Duser.home=/opt -Xms1024M -Xmx1024M -Xmn256m
+  # Broker 角色,SYNC_MASTER 同步双写 Master,ASYNC_MASTER 异步复制 Master,SLAVE 从角色
+  brokerRole: SLAVE
+  # BrokerId，必须是大等于0的整数，0 表示Master，> 0表示Slave
+  brokerId: "1"
+
+################################
+####### 自动绑定 pvc 与 pv #######
+################################
+persistence:
+  enabled: false
+  size: "60Gi"
+  accessModes:
+    - ReadWriteOnce
+  # 绑定动态 PV
+  storageClass: rocketmq-test
+  # existingClaim:
+  annotations: {}

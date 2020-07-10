@@ -1,0 +1,92 @@
+{{- if .Values.namesrv.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "quark.fullname" . }}-namesrv
+  labels:
+    {{- include "quark.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.namesrv.replicaCount }}
+  serviceName: {{ template "quark.fullname" . }}-namesrv-headless
+  selector:
+    matchLabels:
+      {{- include "quark.selectorLabels" . | nindent 6 }}
+      app: {{ template "quark.fullname" . }}-namesrv
+  template:
+    metadata:
+      labels:
+        {{- include "quark.selectorLabels" . | nindent 8 }}
+        app: {{ template "quark.fullname" . }}-namesrv
+    spec:
+    {{- with .Values.shareConfig.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "quark.serviceAccountName" . }}
+      containers:
+        - name: {{ .Values.namesrv.appName }}
+          {{- if .Values.namesrv.securityContext }}
+          securityContext:
+            {{- toYaml .Values.namesrv.securityContext | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.shareConfig.image.repository }}:{{ .Values.shareConfig.image.tag }}"
+          imagePullPolicy: {{ .Values.shareConfig.image.pullPolicy }}
+          command: ["sh","/home/rocketmq/rocketmq-4.7.0/bin/mqnamesrv"]
+          ports:
+          - name: namesrv
+            containerPort: {{ .Values.namesrv.service.namesrvPort }}
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+            - name: ROCKETMQ_VERSION
+              value: {{ .Values.shareConfig.image.tag | quote }}
+            - name: ROCKETMQ_NAME
+              {{- $releaseNamespace := .Release.Namespace }}
+              {{- $rocketmqFullname := include "quark.fullname" . }}
+              {{- $replicaCount := int .Values.namesrv.replicaCount }}
+              {{- $namesrvPort := int .Values.namesrv.service.namesrvPort }}
+              {{- $rocketmqHeadlessServiceName := printf "%s-%s" $rocketmqFullname "namesrv-headless" | trunc 63  }}
+              {{- $clusterDomain := .Values.shareConfig.clusterDomain }}
+              value: {{ range $i, $e := until $replicaCount }}{{ $rocketmqFullname }}-namesrv-{{ $e }}.{{ $rocketmqHeadlessServiceName }}.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}:{{ $namesrvPort }} {{ end }}
+          {{- if .Values.namesrv.containerEnv }}
+          {{- toYaml .Values.namesrv.containerEnv | nindent 12 }}
+          {{- end }}
+          {{- if .Values.namesrv.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.namesrv.service.namesrvPort }}     
+            initialDelaySeconds: {{ .Values.namesrv.livenessProbe.initialDelaySeconds }}
+            failureThreshold: {{ .Values.namesrv.livenessProbe.failureThreshold }}
+            timeoutSeconds: {{ .Values.namesrv.livenessProbe.timeoutSeconds }}
+          {{- end }} 
+          {{- if .Values.namesrv.readinessProbe.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.namesrv.service.namesrvPort }}
+            initialDelaySeconds: {{ .Values.namesrv.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.namesrv.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.namesrv.readinessProbe.timeoutSeconds }}
+          {{- end }} 
+          resources:
+            {{- toYaml .Values.namesrv.resources | nindent 12 }}
+          volumeMounts:
+          - name: localtime
+            readOnly: true
+            mountPath: /etc/localtime
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      {{- with .Values.shareConfig.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.shareConfig.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.shareConfig.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 6 }}
+    {{- end }}
+{{- end }}
