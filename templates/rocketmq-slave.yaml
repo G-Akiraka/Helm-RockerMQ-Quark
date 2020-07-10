@@ -87,8 +87,9 @@ spec:
             periodSeconds: {{ .Values.slave.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.slave.readinessProbe.timeoutSeconds }}
           {{- end }} 
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.slave.resources }}
+          resources: {{- toYaml .Values.slave.resources | nindent 12 }}
+          {{- end }}
           volumeMounts:
           - name: localtime
             readOnly: true
