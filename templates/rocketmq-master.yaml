@@ -89,7 +89,7 @@ spec:
           {{- end }} 
           resources:
           {{- if .Values.master.resources }}
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.master.resources | nindent 12 }}
           {{- end }} 
           volumeMounts:
           - name: localtime
