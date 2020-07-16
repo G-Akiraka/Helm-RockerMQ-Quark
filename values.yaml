@@ -190,7 +190,7 @@ master:
       memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 1024Mi
+      memory: 2048Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
