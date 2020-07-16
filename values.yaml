@@ -103,10 +103,10 @@ console:
   resources:
     limits:
       cpu: 500m
-      memory: 2048Mi
+      memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 1024Mi
+      memory: 512Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
@@ -142,10 +142,10 @@ namesrv:
   resources:
     limits:
       cpu: 500m
-      memory: 2048Mi
+      memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 1024Mi
+      memory: 512Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
@@ -154,7 +154,7 @@ namesrv:
   # 容器环境变量
   containerEnv:
     - name: JAVA_OPT_EXT
-      value: -Duser.home=/opt -Xms1024M -Xmx1024M -Xmn256m
+      value: -Duser.home=/opt -Xms512M -Xmx1024M -Xmn256m
 
 ################################
 ######## RocketMQ Master #######
@@ -187,10 +187,10 @@ master:
   resources:
     limits:
       cpu: 500m
-      memory: 2048Mi
+      memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 1024Mi
+      memory: 512Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
@@ -200,7 +200,7 @@ master:
   # 容器环境变量
   containerEnv:
     - name: JAVA_OPT_EXT
-      value: -Duser.home=/opt -Xms1024M -Xmx1024M -Xmn256m
+      value: -Duser.home=/opt -Xms512M -Xmx1024M -Xmn256m
   # Broker 角色,SYNC_MASTER 同步双写 Master,ASYNC_MASTER 异步复制 Master,SLAVE 从角色
   brokerRole: SYNC_MASTER
   # BrokerId，必须是大等于0的整数，0 表示Master，> 0表示Slave
@@ -237,10 +237,10 @@ slave:
   resources:
     limits:
       cpu: 500m
-      memory: 2048Mi
+      memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 1024Mi
+      memory: 512Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
@@ -249,7 +249,7 @@ slave:
   # 容器环境变量
   containerEnv:
     - name: JAVA_OPT_EXT
-      value: -Duser.home=/opt -Xms1024M -Xmx1024M -Xmn256m
+      value: -Duser.home=/opt -Xms512M -Xmx1024M -Xmn256m
   # Broker 角色,SYNC_MASTER 同步双写 Master,ASYNC_MASTER 异步复制 Master,SLAVE 从角色
   brokerRole: SLAVE
   # BrokerId，必须是大等于0的整数，0 表示Master，> 0表示Slave
