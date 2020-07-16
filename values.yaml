@@ -103,10 +103,10 @@ console:
   resources:
     limits:
       cpu: 500m
-      memory: 1024Mi
+      memory: 2048Mi
     requests:
       cpu: 500m
-      memory: 2048Mi
+      memory: 1024Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
@@ -142,7 +142,7 @@ namesrv:
   resources:
     limits:
       cpu: 500m
-      memory: 1024Mi
+      memory: 2048Mi
     requests:
       cpu: 500m
       memory: 1024Mi
@@ -237,7 +237,7 @@ slave:
   resources:
     limits:
       cpu: 500m
-      memory: 1024Mi
+      memory: 2048Mi
     requests:
       cpu: 500m
       memory: 1024Mi

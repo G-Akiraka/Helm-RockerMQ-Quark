@@ -68,7 +68,7 @@ spec:
             timeoutSeconds: {{ .Values.namesrv.readinessProbe.timeoutSeconds }}
           {{- end }} 
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.namesrv.resources | nindent 12 }}
           volumeMounts:
           - name: localtime
             readOnly: true
