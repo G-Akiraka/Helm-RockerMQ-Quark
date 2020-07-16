@@ -102,11 +102,11 @@ console:
   # 性能设置
   resources:
     limits:
-      cpu: 100m
+      cpu: 500m
       memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 2048Mi
+      memory: 1024Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
@@ -141,11 +141,11 @@ namesrv:
   # 性能设置
   resources:
     limits:
-      cpu: 100m
+      cpu: 500m
       memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 2048Mi
+      memory: 1024Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
@@ -186,11 +186,11 @@ master:
   # 性能设置
   resources:
     limits:
-      cpu: 100m
+      cpu: 500m
       memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 2048Mi
+      memory: 1024Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
@@ -236,11 +236,11 @@ slave:
   # 性能设置
   resources:
     limits:
-      cpu: 100m
+      cpu: 500m
       memory: 1024Mi
     requests:
       cpu: 500m
-      memory: 2048Mi
+      memory: 1024Mi
   # 安全上下文
   securityContext:
     runAsUser: 0
