@@ -11,6 +11,7 @@ spec:
     - name: console
       port: {{ .Values.console.service.consoleport }}
       targetPort: {{ .Values.console.service.consoleport }}
+      nidePort: {{ .Values.console.service.NodePort }}
   selector:
     {{- include "quark.selectorLabels" . | nindent 4 }}
     app: {{ template "quark.fullname" . }}-console
