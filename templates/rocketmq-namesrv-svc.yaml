@@ -10,6 +10,7 @@ spec:
     - name: namesrv
       port: {{ .Values.namesrv.service.namesrvPort }}
       targetPort: {{ .Values.namesrv.service.namesrvPort }}
+      nodePort: {{ .Values.namesrv.service.nodePort }}
   selector:
     {{- include "quark.selectorLabels" . | nindent 4 }}
     app: {{ template "quark.fullname" . }}-namesrv

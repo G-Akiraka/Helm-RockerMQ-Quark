@@ -87,6 +87,7 @@ console:
   service:
     type: NodePort
     consoleport: 8080
+    # nodePort:
   # 判断容器是否存活
   livenessProbe:
     enabled: false
@@ -126,6 +127,7 @@ namesrv:
   service:
     type: ClusterIP
     namesrvPort: 9876
+    # nodePort: 
   # 判断容器是否存活
   livenessProbe:
     enabled: false
